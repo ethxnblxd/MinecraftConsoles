@@ -36,6 +36,8 @@
 #include "FrustumCuller.h"
 #include "Camera.h"
 
+#include "chrono"
+
 #include "..\Minecraft.World\MobEffect.h"
 #include "..\Minecraft.World\Difficulty.h"
 #include "..\Minecraft.World\net.minecraft.world.level.h"
@@ -1509,10 +1511,42 @@ void Minecraft::run_middle()
 								}
 							}
 
-							if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_DROP))
-								localplayers[i]->ullButtonsPressed|=1LL<<MINECRAFT_ACTION_DROP;
+							static bool wasDown = false;
+							static std::chrono::steady_clock::time_point pressTime;
 
-							if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_CRAFTING) || g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_CRAFTING_ALT))
+							bool down = g_KBMInput.IsKeyDown(KeyboardMouseInput::KEY_DROP);
+
+							if (g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_DROP) && g_KBMInput.IsKeyDown(VK_CONTROL)) 
+							// TO DROP A STACK
+							{
+								localplayers[i]->ullButtonsPressed |= 1LL << MINECRAFT_ACTION_DROPALL;
+							}
+
+							else if (down) 
+							// CHANGED FROM IsKeyPressed SO YOU CAN HOLD TO DROP (after 0.3 sec delay).
+							{
+								auto now = std::chrono::steady_clock::now();
+
+								if (!wasDown)
+								{
+									// first press
+									localplayers[i]->ullButtonsPressed |= 1LL << MINECRAFT_ACTION_DROP;
+									pressTime = now;
+								}
+								else
+								{
+									float held = std::chrono::duration<float>(now - pressTime).count();
+
+									if (held > 0.3f)
+									{
+										localplayers[i]->ullButtonsPressed |= 1LL << MINECRAFT_ACTION_DROP;
+									}
+								}
+							}
+
+							wasDown = down;
+
+							if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_CRAFTING))
 							{
 							if((ui.IsSceneInStack(i, eUIScene_Crafting2x2Menu) || ui.IsSceneInStack(i, eUIScene_Crafting3x3Menu) || ui.IsSceneInStack(i, eUIScene_CreativeMenu) || isClosableByEitherKey) && !isEditing)
 							{
@@ -1524,18 +1558,27 @@ void Minecraft::run_middle()
 							}
 						}
 
-							for (int slot = 0; slot < 9; slot++)
+							// PREVENTS SWITCHING HOTBAR SLOTS WHEN IN MENUS
+
+							if (!ui.GetMenuDisplayed(0))
 							{
-								if (g_KBMInput.IsKeyPressed('1' + slot))
+								for (int slot = 0; slot < 9; slot++)
 								{
-									if (localplayers[i]->inventory)
-										localplayers[i]->inventory->selected = slot;
+									if (g_KBMInput.IsKeyPressed('1' + slot))
+									{
+										if (localplayers[i]->inventory)
+											localplayers[i]->inventory->selected = slot;
+									}
 								}
 							}
+
 						}
+						
 
 						// Utility keys always work regardless of KBM active state
-						if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_PAUSE) && !ui.GetMenuDisplayed(i))
+						Minecraft* pMinecraft = Minecraft::GetInstance();
+
+						if(g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_PAUSE) && !ui.GetMenuDisplayed(i) && pMinecraft->screen == NULL)
 						{
 							localplayers[i]->ullButtonsPressed|=1LL<<MINECRAFT_ACTION_PAUSEMENU;
 							app.DebugPrintf("PAUSE PRESSED (keyboard) - ipad = %d\n",i);
@@ -2590,6 +2633,36 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 				case Item::sword_diamond_Id:
 				case Item::sword_gold_Id:
 					*piUse=IDS_TOOLTIPS_BLOCK;
+					break;
+
+				// QUICK EQUIP FOR ARMOR (TOOLTIPS ONLY)
+
+				// LEATHER
+				case Item::helmet_leather_Id:
+				case Item::chestplate_leather_Id:
+				case Item::leggings_leather_Id:
+				case Item::boots_leather_Id:
+				// CHAIN
+				case Item::helmet_chain_Id:
+				case Item::chestplate_chain_Id:
+				case Item::leggings_chain_Id:
+				case Item::boots_chain_Id:
+				// IRON
+				case Item::helmet_iron_Id:
+				case Item::chestplate_iron_Id:
+				case Item::leggings_iron_Id:
+				case Item::boots_iron_Id:
+				// GOLD
+				case Item::helmet_gold_Id:
+				case Item::chestplate_gold_Id:
+				case Item::leggings_gold_Id:
+				case Item::boots_gold_Id:
+				// DIAMOND
+				case Item::helmet_diamond_Id:
+				case Item::chestplate_diamond_Id:
+				case Item::leggings_diamond_Id:
+				case Item::boots_diamond_Id:
+					*piUse=IDS_TOOLTIPS_EQUIP;
 					break;
 
 				case Item::bucket_empty_Id:
@@ -3746,10 +3819,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 		if((player->ullButtonsPressed&(1LL<<MINECRAFT_ACTION_INVENTORY)) && gameMode->isInputAllowed(MINECRAFT_ACTION_INVENTORY))
 		{
 			shared_ptr<MultiplayerLocalPlayer> player = Minecraft::GetInstance()->player;
-			if (!player->isRiding())
-			{
-				ui.PlayUISFX(eSFX_Press);
-			}
+			ui.PlayUISFX(eSFX_Press);
 
 			if(gameMode->isServerControlledInventory())
 			{
@@ -3803,6 +3873,11 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 		if((player->ullButtonsPressed&(1LL<<MINECRAFT_ACTION_DROP)) && gameMode->isInputAllowed(MINECRAFT_ACTION_DROP))
 		{
 			player->drop();
+		}
+
+		if((player->ullButtonsPressed&(1LL<<MINECRAFT_ACTION_DROPALL)) && gameMode->isInputAllowed(MINECRAFT_ACTION_DROPALL))
+		{
+			player->dropall();
 		}
 
 		uint64_t ullButtonsPressed=player->ullButtonsPressed;

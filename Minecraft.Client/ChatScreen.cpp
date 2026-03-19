@@ -6,6 +6,7 @@
 #include "..\Minecraft.World\SharedConstants.h"
 #include "..\Minecraft.World\StringHelpers.h"
 #include "..\Minecraft.World\ChatPacket.h"
+#include "Windows64\KeyboardMouseInput.h"
 
 const wstring ChatScreen::allowedChars = SharedConstants::acceptableLetters;
 vector<wstring> ChatScreen::s_chatHistory;
@@ -85,24 +86,27 @@ void ChatScreen::handleHistoryDown()
 
 void ChatScreen::keyPressed(wchar_t ch, int eventKey)
 {
+
     if (eventKey == Keyboard::KEY_ESCAPE)
-	{
+    {
         minecraft->setScreen(nullptr);
         return;
     }
+
     if (eventKey == Keyboard::KEY_RETURN)
-	{
+    {
         wstring trim = trimString(message);
-        if (trim.length() > 0)
-		{
+        if (!trim.empty())
+        {
             if (!minecraft->handleClientSideCommand(trim))
-			{
+            {
                 MultiplayerLocalPlayer* mplp = dynamic_cast<MultiplayerLocalPlayer*>(minecraft->player.get());
                 if (mplp && mplp->connection)
                     mplp->connection->send(shared_ptr<ChatPacket>(new ChatPacket(trim)));
             }
+
             if (s_chatHistory.empty() || s_chatHistory.back() != trim)
-			{
+            {
                 s_chatHistory.push_back(trim);
                 if (s_chatHistory.size() > CHAT_HISTORY_MAX)
                     s_chatHistory.erase(s_chatHistory.begin());
@@ -111,32 +115,96 @@ void ChatScreen::keyPressed(wchar_t ch, int eventKey)
         minecraft->setScreen(nullptr);
         return;
     }
+
     if (eventKey == Keyboard::KEY_UP)   { handleHistoryUp();   return; }
     if (eventKey == Keyboard::KEY_DOWN) { handleHistoryDown(); return; }
+
     if (eventKey == Keyboard::KEY_LEFT)
-	{
-        if (cursorIndex > 0)
+    {
+        if (g_KBMInput.IsKeyDown(VK_CONTROL))
+        {
+            // move left by word
+            while (cursorIndex > 0 && iswspace(message[cursorIndex - 1])) cursorIndex--;
+            while (cursorIndex > 0 && !iswspace(message[cursorIndex - 1])) cursorIndex--;
+        }
+        else if (cursorIndex > 0)
+        {
             cursorIndex--;
+        }
         return;
     }
+
     if (eventKey == Keyboard::KEY_RIGHT)
-	{
-        if (cursorIndex < static_cast<int>(message.length()))
+    {
+        int len = static_cast<int>(message.length());
+        if (g_KBMInput.IsKeyDown(VK_CONTROL))
+        {
+            // move right by word
+            while (cursorIndex < len && !iswspace(message[cursorIndex])) cursorIndex++;
+            while (cursorIndex < len && iswspace(message[cursorIndex])) cursorIndex++;
+        }
+        else if (cursorIndex < len)
+        {
             cursorIndex++;
+        }
         return;
     }
+
+    // NEEDS IMPLEMENTING (CTRL + BACKSPACE TO DELETE WORD)
+
     if (eventKey == Keyboard::KEY_BACK && cursorIndex > 0)
-	{
-        message.erase(cursorIndex - 1, 1);
-        cursorIndex--;
+    {
+        if (g_KBMInput.IsKeyDown(VK_CONTROL))
+        {
+            return;
+        }
+        else
+        {
+            message.erase(cursorIndex - 1, 1);
+            cursorIndex--;
+            return;
+        }
+
+    }
+
+    // NEEDS IMPLEMENTING (CTRL + A TO SELECT ALL)
+
+    if (g_KBMInput.IsKeyDown(VK_CONTROL) && g_KBMInput.IsKeyPressed('A'))
+    {
         return;
     }
+
+    // NEEDS IMPLEMENTING (SHIFT + LEFT ARROW TO SELECT CHARACTER)
+
+    if (g_KBMInput.IsKeyDown(VK_SHIFT) && g_KBMInput.IsKeyPressed(VK_LEFT))
+    {
+        return;
+    }
+
+    // NEEDS IMPLEMENTING (SHIFT + RIGHT ARROW TO SELECT CHARACTER)
+
+    if (g_KBMInput.IsKeyDown(VK_SHIFT) && g_KBMInput.IsKeyPressed(VK_RIGHT))
+    {
+        return;
+    }
+
+    // NEEDS IMPLEMENTING (TAB TO AUTOFILL USERNAMES e.g( et > TAB > ethxnblxd )) 
+    // if theres multiple usernames then make a gui above the chat window and cycle through them by using tab)
+
+    if (eventKey == Keyboard::KEY_TAB) // NEEDS FIXING OPENS PLAYERLIST IN CHAT WINDOW
+    {
+        return;
+    }
+
     if (isAllowedChatChar(ch) && static_cast<int>(message.length()) < SharedConstants::maxChatLength)
-	{
+    {
         message.insert(cursorIndex, 1, ch);
         cursorIndex++;
     }
 }
+
+
+// NEEDS IMPLEMENTING (BLUE CHARACTER SELECTION RENDERING)
 
 void ChatScreen::render(int xm, int ym, float a)
 {
