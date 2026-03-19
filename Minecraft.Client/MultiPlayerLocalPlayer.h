@@ -36,6 +36,9 @@ public:
 
 	using Player::drop;
     virtual shared_ptr<ItemEntity> drop();
+
+	using Player::dropall;
+    virtual shared_ptr<ItemEntity> dropall();
 protected:
 	virtual void reallyDrop(shared_ptr<ItemEntity> itemEntity);
 public:

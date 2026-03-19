@@ -179,6 +179,12 @@ shared_ptr<ItemEntity> MultiplayerLocalPlayer::drop()
 	return nullptr;
 }
 
+shared_ptr<ItemEntity> MultiplayerLocalPlayer::dropall()
+{
+	connection->send(std::make_shared<PlayerActionPacket>(PlayerActionPacket::DROP_ALL_ITEMS, 0, 0, 0, 0));
+	return nullptr;
+}
+
 void MultiplayerLocalPlayer::reallyDrop(shared_ptr<ItemEntity> itemEntity)
 {
 }
