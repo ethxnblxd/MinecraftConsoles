@@ -1802,7 +1802,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 		}
 
 		// TAB opens game info menu. - Vvis :3 - Updated by detectiveren
-		if (g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_HOST_SETTINGS) && !ui.GetMenuDisplayed(0))
+		if (g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_HOST_SETTINGS) && !ui.GetMenuDisplayed(0) && pMinecraft->screen == NULL)
 		{
 			if (Minecraft* pMinecraft = Minecraft::GetInstance())
 			{
@@ -1815,6 +1815,14 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
 		// Open chat
 		if (g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_CHAT) && app.GetGameStarted() && !ui.GetMenuDisplayed(0) && pMinecraft->screen == NULL)
+		{
+			g_KBMInput.ClearCharBuffer();
+			pMinecraft->setScreen(new ChatScreen());
+			SetFocus(g_hWnd);
+		}
+
+		else if (g_KBMInput.IsKeyPressed(KeyboardMouseInput::KEY_SLASHCOMMANDCHAT) && app.GetGameStarted() && !ui.GetMenuDisplayed(0) && pMinecraft->screen == NULL)
+		// Needs to set the message with "/" when pressed.
 		{
 			g_KBMInput.ClearCharBuffer();
 			pMinecraft->setScreen(new ChatScreen());
