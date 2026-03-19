@@ -201,6 +201,9 @@ public:
 	shared_ptr<ItemEntity> drop(shared_ptr<ItemInstance> item);
 	shared_ptr<ItemEntity> drop(shared_ptr<ItemInstance> item, bool randomly);
 
+	virtual shared_ptr<ItemEntity> dropall(bool all);
+	shared_ptr<ItemEntity> dropall(shared_ptr<ItemInstance> item);
+	shared_ptr<ItemEntity> dropall(shared_ptr<ItemInstance> item, bool randomly);
 protected:
 	virtual void reallyDrop(shared_ptr<ItemEntity> thrownItem);
 

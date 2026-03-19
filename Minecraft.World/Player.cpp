@@ -1205,6 +1205,56 @@ shared_ptr<ItemEntity> Player::drop(shared_ptr<ItemInstance> item, bool randomly
 	return thrownItem;
 }
 
+shared_ptr<ItemEntity> Player::dropall(bool all)
+{
+	return dropall(inventory->removeItem(inventory->selected, all && inventory->getSelected() != nullptr ? inventory->getSelected()->count : inventory->getSelected()->count), false);
+}
+
+shared_ptr<ItemEntity> Player::dropall(shared_ptr<ItemInstance> item)
+{
+	return dropall(item, false);
+}
+
+shared_ptr<ItemEntity> Player::dropall(shared_ptr<ItemInstance> item, bool randomly)
+{
+	if (item == nullptr) return nullptr;
+	if (item->count == 0) return nullptr;
+
+	shared_ptr<ItemEntity> thrownItem = std::make_shared<ItemEntity>(level, x, y - 0.3f + getHeadHeight(), z, item);
+	thrownItem->throwTime = 20 * 2;
+
+	thrownItem->setThrower(getName());
+
+	float pow = 0.1f;
+	if (randomly)
+	{
+		float _pow = random->nextFloat() * 0.5f;
+		float dir = random->nextFloat() * PI * 2;
+		thrownItem->xd = -sin(dir) * _pow;
+		thrownItem->zd = cos(dir) * _pow;
+		thrownItem->yd = 0.2f;
+
+	}
+	else
+	{
+		pow = 0.3f;
+		thrownItem->xd = -sin(yRot / 180 * PI) * cos(xRot / 180 * PI) * pow;
+		thrownItem->zd = cos(yRot / 180 * PI) * cos(xRot / 180 * PI) * pow;
+		thrownItem->yd = -sin(xRot / 180 * PI) * pow + 0.1f;
+		pow = 0.02f;
+
+		float dir = random->nextFloat() * PI * 2;
+		pow *= random->nextFloat();
+		thrownItem->xd += cos(dir) * pow;
+		thrownItem->yd += (random->nextFloat() - random->nextFloat()) * 0.1f;
+		thrownItem->zd += sin(dir) * pow;
+	}
+
+	reallyDrop(thrownItem);
+
+	return thrownItem;
+}
+
 
 void Player::reallyDrop(shared_ptr<ItemEntity> thrownItem)
 {
