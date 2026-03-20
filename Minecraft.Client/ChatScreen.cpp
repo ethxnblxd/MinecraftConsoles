@@ -227,7 +227,7 @@ void ChatScreen::keyPressed(wchar_t ch, int eventKey)
         return;
     }
 
-    if (!g_KBMInput.IsKeyDown(VK_CONTROL) && isAllowedChatChar(ch) && static_cast<int>(message.length()) < SharedConstants::maxChatLength) // BLOCKS CTRL CHARS FROM BEING PARSED
+    if (isAllowedChatChar(ch) && static_cast<int>(message.length()) < SharedConstants::maxChatLength)
     {
         message.insert(cursorIndex, 1, ch);
         cursorIndex++;
