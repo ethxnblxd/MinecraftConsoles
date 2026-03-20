@@ -23,8 +23,8 @@ public:
 	static const int KEY_SPRINT = VK_CONTROL;
 	static const int KEY_INVENTORY = 'E';
 	static const int KEY_DROP = 'Q';
-	static const int KEY_CRAFTING = 'R';
-	static const int KEY_ZOOM = 'C';
+	static const int KEY_CRAFTING = 'C';
+	static const int KEY_CRAFTING_ALT = 'R';
 	static const int KEY_CHAT = 'T';
 	static const int KEY_SLASHCOMMANDCHAT = VK_OEM_2;
 	static const int KEY_CONFIRM = VK_RETURN;
@@ -40,7 +40,6 @@ public:
 
 	// todo: implement and shi
 	static const int KEY_SCREENSHOT = VK_F2;
-	static const int KEY_PICKBLOCK = MOUSE_MIDDLE;
 
 	void Init();
 	void Tick();
