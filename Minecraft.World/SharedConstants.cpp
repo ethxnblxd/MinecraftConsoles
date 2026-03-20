@@ -32,9 +32,13 @@ wstring SharedConstants::readAcceptableChars()
 
 bool SharedConstants::isAllowedChatCharacter(char ch)
 {
-	//return ch != '§' && (acceptableLetters.indexOf(ch) >= 0 || (int) ch > 32);
-	// 4J Unused
-	return true;
+	// SHOULD block control chars but it doesnt for some reason... (ctrl+backspace)
+	// also removed the S symbol because we can just make color codes not work in chat.
+
+    if (std::iscntrl(static_cast<unsigned char>(ch)))
+        return false;
+
+    return acceptableLetters.find(ch) != std::string::npos || std::isprint(static_cast<unsigned char>(ch));
 }
 
 wstring SharedConstants::acceptableLetters;

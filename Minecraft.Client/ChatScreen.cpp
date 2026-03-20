@@ -7,6 +7,7 @@
 #include "..\Minecraft.World\StringHelpers.h"
 #include "..\Minecraft.World\ChatPacket.h"
 #include "Windows64\KeyboardMouseInput.h"
+#include "Common\UI\UIComponent_DebugUIConsole.h"
 
 const wstring ChatScreen::allowedChars = SharedConstants::acceptableLetters;
 vector<wstring> ChatScreen::s_chatHistory;
@@ -23,6 +24,12 @@ ChatScreen::ChatScreen()
 	frame = 0;
 	cursorIndex = 0;
 	s_historyIndex = -1;
+
+    if (g_KBMInput.IsKeyPressed(VK_OEM_2))
+        {
+            message.insert(cursorIndex, 1, L'/');
+            cursorIndex++;
+        }
 }
 
 void ChatScreen::init()
@@ -150,21 +157,45 @@ void ChatScreen::keyPressed(wchar_t ch, int eventKey)
         return;
     }
 
-    // NEEDS IMPLEMENTING (CTRL + BACKSPACE TO DELETE WORD)
-
     if (eventKey == Keyboard::KEY_BACK && cursorIndex > 0)
     {
+        std::wstring trim;
+
         if (g_KBMInput.IsKeyDown(VK_CONTROL))
         {
-            return;
+            trim = L"CTRL + BACK PRESSED";
+
+            size_t start = cursorIndex;
+
+            while (start > 0 && iswspace(message[start - 1]))
+                start--;
+
+            while (start > 0 && !iswspace(message[start - 1]))
+                start--;
+
+            message.erase(start, cursorIndex - start);
+            cursorIndex = start;
         }
         else
         {
+            trim = L"BACK PRESSED";
+
             message.erase(cursorIndex - 1, 1);
             cursorIndex--;
-            return;
         }
 
+        // PRINTING OUT WHEN TRIGGERED FOR DEBUGGING
+
+        wstring trim1 = trimString(trim);
+
+        if (!minecraft->handleClientSideCommand(trim1))
+        {
+            MultiplayerLocalPlayer* mplp = dynamic_cast<MultiplayerLocalPlayer*>(minecraft->player.get());
+            if (mplp && mplp->connection)
+                mplp->connection->send(std::make_shared<ChatPacket>(trim1));
+        }
+
+        return;
     }
 
     // NEEDS IMPLEMENTING (CTRL + A TO SELECT ALL)
@@ -191,12 +222,12 @@ void ChatScreen::keyPressed(wchar_t ch, int eventKey)
     // NEEDS IMPLEMENTING (TAB TO AUTOFILL USERNAMES e.g( et > TAB > ethxnblxd )) 
     // if theres multiple usernames then make a gui above the chat window and cycle through them by using tab)
 
-    if (eventKey == Keyboard::KEY_TAB) // NEEDS FIXING OPENS PLAYERLIST IN CHAT WINDOW
+    if (eventKey == Keyboard::KEY_TAB)
     {
         return;
     }
 
-    if (isAllowedChatChar(ch) && static_cast<int>(message.length()) < SharedConstants::maxChatLength)
+    if (!g_KBMInput.IsKeyDown(VK_CONTROL) && isAllowedChatChar(ch) && static_cast<int>(message.length()) < SharedConstants::maxChatLength) // BLOCKS CTRL CHARS FROM BEING PARSED
     {
         message.insert(cursorIndex, 1, ch);
         cursorIndex++;
