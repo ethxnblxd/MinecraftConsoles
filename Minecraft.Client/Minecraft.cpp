@@ -2635,7 +2635,8 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 					*piUse=IDS_TOOLTIPS_BLOCK;
 					break;
 
-				// QUICK EQUIP FOR ARMOR (TOOLTIPS ONLY)
+				// QUICK EQUIP FOR ARMOR (TOOLTIPS ONLY) 
+				// NEEDS LOGIC IMPLEMENTATION!
 
 				// LEATHER
 				case Item::helmet_leather_Id:

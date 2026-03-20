@@ -188,12 +188,12 @@ void ChatScreen::keyPressed(wchar_t ch, int eventKey)
 
         wstring trim1 = trimString(trim);
 
-        if (!minecraft->handleClientSideCommand(trim1))
-        {
-            MultiplayerLocalPlayer* mplp = dynamic_cast<MultiplayerLocalPlayer*>(minecraft->player.get());
-            if (mplp && mplp->connection)
-                mplp->connection->send(std::make_shared<ChatPacket>(trim1));
-        }
+        //if (!minecraft->handleClientSideCommand(trim1))
+        //{
+        //    MultiplayerLocalPlayer* mplp = dynamic_cast<MultiplayerLocalPlayer*>(minecraft->player.get());
+        //    if (mplp && mplp->connection)
+        //        mplp->connection->send(std::make_shared<ChatPacket>(trim1));
+        //}
 
         return;
     }
